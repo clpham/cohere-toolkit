@@ -1,22 +1,22 @@
 version: '3.8'
 
 services:
-  db:
-    image: postgres:14.11-alpine
-    restart: always
-    healthcheck:
-      test: ['CMD-SHELL', 'pg_isready']
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    environment:
-      - PGUSER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=toolkit
-    ports:
-      - '5432:5432'
-    volumes: 
-      - db:/var/lib/postgresql/data
+  #db:
+  #  image: postgres:14.11-alpine
+  #  restart: always
+  #  healthcheck:
+  #    test: ['CMD-SHELL', 'pg_isready']
+  #    interval: 10s
+  #    timeout: 5s
+  #    retries: 5
+  #  environment:
+  #    - PGUSER=postgres
+  #    - POSTGRES_PASSWORD=postgres
+  #    - POSTGRES_DB=toolkit
+  #  ports:
+  #    - '5432:5432'
+  #  volumes: 
+  #    - db:/var/lib/postgresql/data
   test_db:
     image: postgres:14.1-alpine
     restart: unless-stopped
@@ -24,6 +24,8 @@ services:
       - PGUSER=postgres
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=test_toolkit
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - '5433:5432'
   backend:
@@ -50,8 +52,8 @@ services:
     tty: true
     ports:
       - '8000:8000'
-    depends_on:
-      - db
+    #depends_on:
+    #  - db
     volumes:
       # Mount alembic folder to sync migrations
       - ./src/backend/alembic:/workspace/src/backend/alembic
@@ -60,6 +62,8 @@ services:
       # For SageMaker: The line below for AWS configure file to sync credentials
       - $HOME/.aws:/root/.aws 
     # network_mode: host
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
       
   frontend:
     build:
@@ -70,6 +74,8 @@ services:
       NEXT_PUBLIC_API_HOSTNAME: ${NEXT_PUBLIC_API_HOSTNAME}
 
     restart: always
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - 4000:4000
     develop:
@@ -79,13 +85,16 @@ services:
           target: /app
           ignore:
           - node_modules/
-  terrarium:
-    image: ghcr.io/cohere-ai/terrarium:latest
-    ports:
-      - '8080:8080'
-    expose:
-      - '8080'
-volumes:
-  db:
-    name: cohere_toolkit_db
-    driver: local
+  #terrarium:
+  #  #image: ghcr.io/cohere-ai/terrarium:latest
+  #  image: terrarium:latest
+  #  extra_hosts:
+  #    - "host.docker.internal:host-gateway"
+  #  ports:
+  #    - '8080:8080'
+  #  expose:
+  #    - '8080'
+#volumes:
+#  db:
+#    name: cohere_toolkit_db
+#    driver: local
